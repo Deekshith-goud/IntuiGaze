@@ -1,0 +1,121 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.venv/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyTorch / ML
+*.pt
+*.pth
+*.onnx
+*.trt
+*.engine
+*.pkl
+*.bin
+checkpoints/
+runs/
+wandb/
+mlruns/
+.mlflow/
+
+# Data
+*.csv
+*.parquet
+*.h5
+*.hdf5
+*.npy
+*.npz
+data/raw/
+data/processed/
+datasets/raw/
+datasets/processed/
+datasets/cache/
+
+# Logs
+logs/
+*.log
+*.out
+*.err
+tensorboard/
+
+# Node
+node_modules/
+.next/
+.nuxt/
+dist/
+build/
+.cache/
+*.local
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+secrets/
+credentials/
+*.pem
+*.key
+*.cert
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Model outputs (large)
+outputs/
+results/experiments/
+artifacts/large/
