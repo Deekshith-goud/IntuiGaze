@@ -1,0 +1,6 @@
+site_name: EyeNav Documentation
+site_url: https://docs.eyenav.ai
+theme:
+  name: material
+nav:
+  - Home: README.md
