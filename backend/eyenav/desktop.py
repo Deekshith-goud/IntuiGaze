@@ -103,5 +103,5 @@ class DesktopController:
                     is_physical_override=False,
                     event_tag="",
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Telemetry log failed: %s", e)

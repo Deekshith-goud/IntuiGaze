@@ -71,7 +71,8 @@ class SaccadeFixationDetector:
         """Update with a new screen-space gaze sample.
 
         Args:
-            x, y: Screen coordinates (pixels) of current gaze.
+            x: Screen x coordinate (pixels) of current gaze.
+            y: Screen y coordinate (pixels) of current gaze.
             timestamp: Current monotonic time (seconds).
 
         Returns:

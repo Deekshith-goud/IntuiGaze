@@ -59,7 +59,7 @@ from enum import Enum, auto
 import numpy as np
 
 from eyenav.config import SafetyConfig
-from eyenav.intent import IntentPrediction, INTENT_CLASSES
+from eyenav.intent import INTENT_CLASSES, IntentPrediction
 
 logger = logging.getLogger(__name__)
 

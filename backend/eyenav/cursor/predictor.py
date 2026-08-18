@@ -50,7 +50,8 @@ class LagCompensationPredictor:
         """Add a sample and return a position predicted ahead by horizon_ms.
 
         Args:
-            x, y: Current screen coordinates (pixels).
+            x: Current screen x coordinate (pixels).
+            y: Current screen y coordinate (pixels).
             timestamp: Current monotonic time (seconds).
 
         Returns:

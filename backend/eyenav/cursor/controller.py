@@ -33,7 +33,6 @@ from collections import deque
 
 import numpy as np
 import pyautogui
-
 from backend.eyenav.cursor.filter import OneEuroFilter
 from backend.eyenav.cursor.mapping import GazeScreenMapper
 from backend.eyenav.cursor.predictor import LagCompensationPredictor

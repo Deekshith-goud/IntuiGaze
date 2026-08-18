@@ -247,15 +247,15 @@ class GazeScreenMapper:
     # ──────────────────────────────────────────────────────────────────────────
 
     @staticmethod
-    def _poly_features(X: np.ndarray) -> np.ndarray:
+    def _poly_features(x_arr: np.ndarray) -> np.ndarray:
         """Compute linear features from pupil coordinates only.
 
         Args:
-            X: Shape (N, 6) or (N, 4). We only use the first 4 (lx, ly, rx, ry).
+            x_arr: Shape (N, 6) or (N, 4). We only use the first 4 (lx, ly, rx, ry).
 
         Returns:
             Shape (N, 5): [1, lx, ly, rx, ry].
         """
-        n = X.shape[0]
+        n = x_arr.shape[0]
         bias = np.ones((n, 1), dtype=np.float64)
-        return np.hstack([bias, X[:, :4].astype(np.float64)])
+        return np.hstack([bias, x_arr[:, :4].astype(np.float64)])

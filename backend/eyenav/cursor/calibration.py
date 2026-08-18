@@ -100,8 +100,9 @@ class CalibrationSession:
 
         This call blocks until the session is complete or cancelled.
         """
-        import cv2
         import tkinter as tk
+
+        import cv2
 
         points = list(_CALIBRATION_POINTS_NORM)
         if self._randomize:
