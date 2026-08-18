@@ -93,17 +93,21 @@ class FaceLandmarkExtractor:
         # State for temporal smoothing (Exponential Moving Average)
         self._smoothed_gaze_x = 0.0
         self._smoothed_gaze_y = 0.0
-        self._alpha = 0.10  # Smoothing factor (lower = smoother but more lag)
+        self._smoothed_lp: tuple[float, float] | None = None
+        self._smoothed_rp: tuple[float, float] | None = None
+        self._alpha = 0.05  # Smoothing factor (lower = smoother but more lag)
 
         # Auto-Calibration State
         self._calibration_frames = 0
         self._gaze_x_baseline_accum = 0.0
         self._gaze_y_baseline_accum = 0.0
         self._brow_baseline_accum = 0.0
+        self._eye_dist_accum = 0.0
 
         self._gaze_x_baseline = 0.0
         self._gaze_y_baseline = 0.0
         self._brow_baseline = None
+        self._eye_dist_baseline = None
 
         logger.info(
             "FaceLandmarkExtractor (Tasks API) initialized. Please look center and neutral for 1 second."
@@ -141,10 +145,7 @@ class FaceLandmarkExtractor:
         left_ear = self._compute_ear(points, LEFT_EYE_INDICES)
         right_ear = self._compute_ear(points, RIGHT_EYE_INDICES)
 
-        left_pupil = (float(points[LEFT_IRIS_CENTER][0]), float(points[LEFT_IRIS_CENTER][1]))
-        right_pupil = (float(points[RIGHT_IRIS_CENTER][0]), float(points[RIGHT_IRIS_CENTER][1]))
-
-        # --- Heuristics for Demo ---
+        # --- Gaze Vector Calculation (Distance/Scale Invariant) ---
         # Gaze X/Y calculation using eye bounding boxes
         left_eye_pts = points[LEFT_EYE_INDICES]
         right_eye_pts = points[RIGHT_EYE_INDICES]
@@ -156,14 +157,36 @@ class FaceLandmarkExtractor:
         # Eye width and height for normalization
         left_width = np.linalg.norm(left_eye_pts[0] - left_eye_pts[3])
         left_height = np.linalg.norm(left_eye_pts[1] - left_eye_pts[5])
+        
+        # Calculate physical distance proxy (distance between eyes in normalized coordinates)
+        eye_dist = float(np.linalg.norm(left_center - right_center))
 
-        # Gaze Vector (Pupil offset from center, normalized by eye dimensions)
+        # --- Gaze Vector Calculation (Distance/Scale Invariant) ---
         left_gaze_vec = (points[LEFT_IRIS_CENTER] - left_center) / np.array(
             [left_width, left_height]
         )
         right_gaze_vec = (points[RIGHT_IRIS_CENTER] - right_center) / np.array(
             [left_width, left_height]
         )
+        
+        # Restore the raw full-image pupil coordinates to preserve the head-navigation macro effect
+        raw_lp = (float(points[LEFT_IRIS_CENTER][0]), float(points[LEFT_IRIS_CENTER][1]))
+        raw_rp = (float(points[RIGHT_IRIS_CENTER][0]), float(points[RIGHT_IRIS_CENTER][1]))
+        
+        # Scale coordinates around the center of the image based on distance from camera
+        if self._eye_dist_baseline is not None:
+            scale = self._eye_dist_baseline / max(eye_dist, 1e-6)
+            left_pupil = (
+                0.5 + (raw_lp[0] - 0.5) * scale,
+                0.5 + (raw_lp[1] - 0.5) * scale
+            )
+            right_pupil = (
+                0.5 + (raw_rp[0] - 0.5) * scale,
+                0.5 + (raw_rp[1] - 0.5) * scale
+            )
+        else:
+            left_pupil = raw_lp
+            right_pupil = raw_rp
 
         # Average the two eyes (x is flipped because camera is mirrored)
         # Apply a MASSIVE sensitivity multiplier so minimal eye movement crosses the screen
@@ -196,17 +219,23 @@ class FaceLandmarkExtractor:
 
         # Auto-calibration for the first 30 frames
         if self._brow_baseline is None:
+            self._calibration_frames += 1
             self._gaze_x_baseline_accum += raw_gaze_x
             self._gaze_y_baseline_accum += raw_gaze_y
             self._brow_baseline_accum += brow_raise
-            self._calibration_frames += 1
+            self._eye_dist_accum += eye_dist
 
             if self._calibration_frames >= 30:  # 1 second at 30fps
                 self._gaze_x_baseline = self._gaze_x_baseline_accum / 30.0
                 self._gaze_y_baseline = self._gaze_y_baseline_accum / 30.0
                 self._brow_baseline = self._brow_baseline_accum / 30.0
+                self._eye_dist_baseline = self._eye_dist_accum / 30.0
                 logger.info(
-                    f"Auto-calibrated. Brow: {self._brow_baseline:.2f}, Gaze Center: ({self._gaze_x_baseline:.2f}, {self._gaze_y_baseline:.2f})"
+                    "Auto-calibrated. Brow: %.2f, Gaze Center: (%.2f, %.2f), Eye Dist: %.4f",
+                    self._brow_baseline,
+                    self._gaze_x_baseline,
+                    self._gaze_y_baseline,
+                    self._eye_dist_baseline
                 )
 
             # During calibration, return neutral values
@@ -242,11 +271,24 @@ class FaceLandmarkExtractor:
             (1.0 - self._alpha) * self._smoothed_gaze_y
         )
 
+        if self._smoothed_lp is None:
+            self._smoothed_lp = left_pupil
+            self._smoothed_rp = right_pupil
+        else:
+            self._smoothed_lp = (
+                self._alpha * left_pupil[0] + (1 - self._alpha) * self._smoothed_lp[0],
+                self._alpha * left_pupil[1] + (1 - self._alpha) * self._smoothed_lp[1],
+            )
+            self._smoothed_rp = (
+                self._alpha * right_pupil[0] + (1 - self._alpha) * self._smoothed_rp[0],
+                self._alpha * right_pupil[1] + (1 - self._alpha) * self._smoothed_rp[1],
+            )
+
         return EyeLandmarks(
             left_ear=left_ear,
             right_ear=right_ear,
-            left_pupil=left_pupil,
-            right_pupil=right_pupil,
+            left_pupil=self._smoothed_lp,
+            right_pupil=self._smoothed_rp,
             raw_points=points,
             gaze_x=self._smoothed_gaze_x,
             gaze_y=self._smoothed_gaze_y,

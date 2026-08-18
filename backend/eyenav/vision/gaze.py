@@ -137,7 +137,7 @@ class GazeEstimator:
             face_patch = self._extract_face_patch(face_image, landmarks)
 
             # 2. Run ONNX inference
-            pitch_yaw = self._run_inference(face_patch)
+            pitch_yaw, pitch_logits, yaw_logits = self._run_inference(face_patch)
 
             # 3. Apply calibration mapping
             if self._calibration_matrix is not None:
@@ -147,7 +147,7 @@ class GazeEstimator:
             gaze_screen = self._pitch_yaw_to_screen(pitch_yaw, head_pose)
 
             # 5. Compute confidence from output distribution sharpness
-            confidence = self._compute_confidence()
+            confidence = self._compute_confidence(pitch_logits, yaw_logits)
 
             return GazeEstimate(
                 gaze_3d=self._pitch_yaw_to_3d(pitch_yaw),
@@ -238,14 +238,17 @@ class GazeEstimator:
         # Normalization follows Zhang et al. (2018) protocol
         raise NotImplementedError("Implement in Phase 2")
 
-    def _run_inference(self, face_patch: np.ndarray) -> np.ndarray:
+    def _run_inference(self, face_patch: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Run ONNX inference on face patch.
 
         Args:
             face_patch: Normalized face patch (1×3×224×224).
 
         Returns:
-            (pitch, yaw) in degrees.
+            Tuple of:
+            - (pitch, yaw) array in degrees.
+            - pitch_logits array.
+            - yaw_logits array.
         """
         outputs = self._session.run(None, {self._session.get_inputs()[0].name: face_patch})
 
@@ -257,7 +260,7 @@ class GazeEstimator:
         pitch_deg = self._logits_to_angle(pitch_logits)
         yaw_deg = self._logits_to_angle(yaw_logits)
 
-        return np.array([pitch_deg, yaw_deg], dtype=np.float32)
+        return np.array([pitch_deg, yaw_deg], dtype=np.float32), pitch_logits, yaw_logits
 
     def _logits_to_angle(self, logits: np.ndarray) -> float:
         """Convert classification logits to continuous angle.
@@ -311,14 +314,31 @@ class GazeEstimator:
 
         return np.array([x, y, z], dtype=np.float32)
 
-    def _compute_confidence(self) -> float:
+    def _compute_confidence(self, pitch_logits: np.ndarray, yaw_logits: np.ndarray) -> float:
         """Compute confidence from the output distribution.
 
         Higher confidence = sharper probability distribution over bins.
         Uses entropy-based measure.
 
+        Args:
+            pitch_logits: Raw logits for pitch bins (90,).
+            yaw_logits: Raw logits for yaw bins (90,).
+
         Returns:
             Confidence score ∈ [0, 1].
         """
-        # TODO: Implement entropy-based confidence in Phase 2
-        return 0.85  # Placeholder
+        def compute_entropy(logits: np.ndarray) -> float:
+            exp_logits = np.exp(logits - logits.max())
+            probs = exp_logits / exp_logits.sum()
+            # Add small epsilon to avoid log(0)
+            entropy = -np.sum(probs * np.log(probs + 1e-9))
+            max_entropy = np.log(len(logits))
+            # Normalized entropy [0, 1]
+            return float(entropy / max_entropy)
+
+        pitch_entropy = compute_entropy(pitch_logits)
+        yaw_entropy = compute_entropy(yaw_logits)
+        
+        # Confidence is inversely proportional to mean normalized entropy
+        confidence = 1.0 - (pitch_entropy + yaw_entropy) / 2.0
+        return max(0.0, min(1.0, float(confidence)))
