@@ -32,7 +32,10 @@ from eyenav.safety import BlockReason, SafetyFilter, VerifiedCommand
 def make_config(**overrides) -> SafetyConfig:
     """Create a SafetyConfig with optional parameter overrides for testing."""
     threshold_defaults = {
-        "low_risk": 0.85, "medium_risk": 0.92, "high_risk": 0.97, "critical_risk": 0.99
+        "low_risk": 0.85,
+        "medium_risk": 0.92,
+        "high_risk": 0.97,
+        "critical_risk": 0.99,
     }
     threshold_defaults.update(overrides.pop("thresholds", {}))
 
@@ -47,14 +50,12 @@ def make_config(**overrides) -> SafetyConfig:
         fatigue_monitoring_enabled=overrides.pop("fatigue_monitoring_enabled", True),
         reading_detection_suppression=overrides.pop("reading_detection_suppression", True),
         anti_pattern_detection=overrides.pop("anti_pattern_detection", True),
-        **overrides
+        **overrides,
     )
 
 
 def make_prediction(
-    intent: str = "selecting",
-    confidence: float = 0.95,
-    command: str = "select"
+    intent: str = "selecting", confidence: float = 0.95, command: str = "select"
 ) -> IntentPrediction:
     """Create a mock IntentPrediction for testing."""
     probs = np.zeros(len(INTENT_CLASSES), dtype=np.float32)
@@ -67,7 +68,7 @@ def make_prediction(
         all_probabilities=probs,
         suggested_command=command,
         command_confidence=confidence,
-        context_window_frames=45
+        context_window_frames=45,
     )
 
 
@@ -145,7 +146,9 @@ class TestCooldownRateLimiter:
 
     def test_command_after_cooldown_passes(self):
         """T-SAFE-011: Command after cooldown period expires must pass."""
-        config = make_config(cooldowns={"scroll": 100}, inter_command_minimum_ms=50)  # Short cooldown for testing
+        config = make_config(
+            cooldowns={"scroll": 100}, inter_command_minimum_ms=50
+        )  # Short cooldown for testing
         safety = SafetyFilter(config)
         prediction = make_prediction(confidence=0.99, command="scroll_up")
 
@@ -170,7 +173,9 @@ class TestCooldownRateLimiter:
         time.sleep(0.25)  # 250ms > 200ms inter-command minimum
 
         # Try a different command
-        result = safety.evaluate(make_prediction(confidence=0.99, command="back", intent="nav_back"))
+        result = safety.evaluate(
+            make_prediction(confidence=0.99, command="back", intent="nav_back")
+        )
 
         assert result.block_reason != BlockReason.COOLDOWN_ACTIVE
 

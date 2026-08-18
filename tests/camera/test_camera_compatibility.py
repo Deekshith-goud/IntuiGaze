@@ -38,8 +38,7 @@ import pytest
 
 # Camera ID can be configured via pytest option
 def pytest_addoption(parser):
-    parser.addoption("--camera-id", action="store", default="0",
-                     help="Camera device ID to test")
+    parser.addoption("--camera-id", action="store", default="0", help="Camera device ID to test")
 
 
 @pytest.fixture
@@ -48,6 +47,7 @@ def camera_id(request) -> int:
 
 
 # ─── Camera Interface Tests (Mocked for CI) ──────────────────────────────
+
 
 class TestCameraInterfaceMocked:
     """Camera interface tests using mocked camera.
@@ -66,6 +66,7 @@ class TestCameraInterfaceMocked:
             mock_cap.read.return_value = (True, fake_frame)
 
             import cv2
+
             cap = cv2.VideoCapture(0)
             assert cap.isOpened()
 
@@ -95,6 +96,7 @@ class TestCameraInterfaceMocked:
             mock_cap.read.side_effect = mock_read
 
             import cv2
+
             cap = cv2.VideoCapture(0)
 
             frames_received = 0
@@ -127,6 +129,7 @@ class TestCameraInterfaceMocked:
             }.get(prop, 0.0)
 
             import cv2
+
             cap = cv2.VideoCapture(0)
             width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
             height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -138,6 +141,7 @@ class TestCameraInterfaceMocked:
 
 
 # ─── Physical Camera Tests (requires_camera marker) ──────────────────────
+
 
 @pytest.mark.requires_camera
 class TestPhysicalCamera:

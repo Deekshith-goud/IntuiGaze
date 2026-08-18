@@ -1,5 +1,4 @@
-"""
-EyeNav test configuration and shared fixtures.
+"""EyeNav test configuration and shared fixtures.
 
 This conftest.py is at the repo root level and provides:
     - pytest marker registration (avoids PytestUnknownMarkWarning)

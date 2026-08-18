@@ -1,0 +1,109 @@
+# EyeNav Default Configuration
+# =============================
+# This is the default configuration for EyeNav.
+# Override any values in a user-specific config file.
+#
+# All values can also be overridden via environment variables:
+# EYENAV_<SECTION>_<KEY>=value
+#
+# Example: EYENAV_CAMERA_DEVICE_ID=1
+
+version: "1.0"
+
+# ─────────────────────────────
+# Camera Configuration
+# ─────────────────────────────
+camera:
+  device_id: 0
+  resolution_width: 1280
+  resolution_height: 720
+  fps_target: 30
+  backend: "auto"  # Options: auto, directshow, v4l2, avfoundation
+
+# ─────────────────────────────
+# Model Paths
+# ─────────────────────────────
+models:
+  face_detection: "models/face_detection/blazeface.onnx"
+  landmarks: "models/landmarks/facemesh.onnx"
+  gaze: "models/gaze/l2cs_mobilenetv3.onnx"
+  blink: "models/blink/blink_cnn.onnx"
+  eyebrow: "models/eyebrow/eyebrow_mlp.onnx"
+  intent: "models/intent/tiny_transformer.onnx"
+  pupil: null  # Optional: "models/pupil/ellseg.onnx" for high-accuracy mode
+
+# ─────────────────────────────
+# Safety System
+# ─────────────────────────────
+safety:
+  # Confidence thresholds per risk level
+  # Higher = more conservative (fewer false positives, more false negatives)
+  thresholds:
+    low_risk: 0.85
+    medium_risk: 0.92
+    high_risk: 0.97
+    critical_risk: 0.99
+  
+  # Command cooldown periods (milliseconds)
+  cooldowns:
+    scroll: 300
+    select: 800
+    back: 1200
+    forward: 1200
+    enter: 1500
+    delete: 2000
+    menu: 600
+  
+  # Emergency stop: eye closure duration to trigger (milliseconds)
+  emergency_stop_duration_ms: 3000
+  
+  # Minimum time between any two commands (milliseconds)
+  inter_command_minimum_ms: 200
+  
+  # Enable fatigue monitoring and adaptive thresholds
+  fatigue_monitoring_enabled: true
+  
+  # Suppress commands when reading pattern detected
+  reading_detection_suppression: true
+  
+  # Enable anti-pattern detection (post-blink artifacts, etc.)
+  anti_pattern_detection: true
+
+# ─────────────────────────────
+# Temporal Context Engine
+# ─────────────────────────────
+temporal:
+  # Length of temporal window for intent classification (milliseconds)
+  window_ms: 1500
+  
+  # Expected pipeline frame rate (determines window size in frames)
+  fps: 30
+  
+  # Gaze smoothing algorithm
+  smoothing: "kalman"  # Options: kalman, one_euro
+
+# ─────────────────────────────
+# Metrics & Observability
+# ─────────────────────────────
+metrics:
+  # Enable Prometheus metrics endpoint
+  enabled: true
+  
+  # Port for Prometheus scraping
+  port: 9090
+  
+  # Export dashboard to Grafana
+  export_to_grafana: false
+
+# ─────────────────────────────
+# OS Integration
+# ─────────────────────────────
+os:
+  # Target platform (auto-detected)
+  platform: "auto"  # Options: auto, windows, macos, linux, android, ios
+  
+  # Enable gaze-cursor mode (continuous cursor tracking)
+  cursor_mode_enabled: true
+  
+  # Scroll amount per scroll command (in "clicks")
+  scroll_amount: 3

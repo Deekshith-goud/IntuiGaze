@@ -20,6 +20,7 @@ from eyenav.safety import BlockReason, SafetyFilter, VerifiedCommand
 
 # ─── Fixtures ──────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def config() -> Config:
     return Config()
@@ -41,7 +42,11 @@ def make_prediction(
     probs[idx] = confidence
     name = INTENT_CLASSES[idx]
     # Always assign a command so all safety layers (including emergency stop) are reached
-    command_map = {"selecting": "select", "scrolling_down": "scroll_down", "scrolling_up": "scroll_up"}
+    command_map = {
+        "selecting": "select",
+        "scrolling_down": "scroll_down",
+        "scrolling_up": "scroll_up",
+    }
     suggested = command_map.get(name, "navigate")
     return IntentPrediction(
         intent=name,
@@ -55,9 +60,9 @@ def make_prediction(
 
 # ─── Integration: IntentEngine → SafetyFilter ──────────────────────────────
 
+
 @pytest.mark.integration
 class TestIntentToSafetyFlow:
-
     def test_high_confidence_flows_to_safety_filter(self, safety_filter: SafetyFilter):
         """High-confidence intent must flow to safety filter and produce VerifiedCommand."""
         # Build prediction directly (IntentEngine requires ONNX model — mocked here)
@@ -131,9 +136,9 @@ class TestIntentToSafetyFlow:
 
 # ─── Integration: Config → SafetyFilter Behavior ──────────────────────────
 
+
 @pytest.mark.integration
 class TestConfigToSafetyBehavior:
-
     def test_strict_threshold_blocks_borderline_confidence(self):
         """SafetyConfig with high threshold must block 0.95 confidence predictions."""
         strict_config = Config(

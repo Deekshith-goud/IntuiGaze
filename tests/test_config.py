@@ -105,16 +105,12 @@ class TestConfigValidation:
     def test_threshold_above_1_raises(self):
         """Confidence threshold > 1.0 must raise."""
         with pytest.raises(Exception):
-            Config(safety=SafetyConfig(
-                thresholds=SafetyThresholds(medium_risk=1.5)
-            ))
+            Config(safety=SafetyConfig(thresholds=SafetyThresholds(medium_risk=1.5)))
 
     def test_threshold_below_0_raises(self):
         """Confidence threshold < 0 must raise."""
         with pytest.raises(Exception):
-            Config(safety=SafetyConfig(
-                thresholds=SafetyThresholds(medium_risk=-0.1)
-            ))
+            Config(safety=SafetyConfig(thresholds=SafetyThresholds(medium_risk=-0.1)))
 
     def test_invalid_camera_backend_raises(self):
         """Invalid camera backend string must raise."""

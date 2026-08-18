@@ -63,7 +63,6 @@ class TestIntentEngineWithoutModel:
 
         assert result.intent == "idle"
         assert result.suggested_command is None
-        assert result.blocked is False  # IntentPrediction doesn't have blocked field
 
     def test_idle_prediction_format(self):
         """Idle prediction must have correct format."""
@@ -136,7 +135,7 @@ class TestExplanationGeneration:
             suggested_command=None,
             command_confidence=0.0,
             context_window_frames=45,
-            attention_weights=None
+            attention_weights=None,
         )
 
         explanation = engine.get_explanation(prediction)
@@ -160,7 +159,7 @@ class TestExplanationGeneration:
             suggested_command="select",
             command_confidence=0.95,
             context_window_frames=45,
-            attention_weights=attention
+            attention_weights=attention,
         )
 
         explanation = engine.get_explanation(prediction)

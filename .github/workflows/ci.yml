@@ -1,0 +1,51 @@
+name: EyeNav CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install ruff mypy types-PyYAML
+      - run: ruff check backend/ tests/
+      - run: ruff format --check backend/ tests/
+      - run: mypy backend/eyenav/ --ignore-missing-imports
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: playwright install chromium
+      - run: pytest tests/ --cov=backend/eyenav --cov-report=xml --cov-fail-under=10 -v --tb=short
+      - uses: codecov/codecov-action@v4
+        with:
+          file: coverage.xml
+          fail_ci_if_error: false
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install bandit pip-audit
+      - run: bandit -r backend/eyenav/ -c pyproject.toml
+      - run: pip-audit -r requirements.txt --ignore-vuln CVE-2024-23342 --ignore-vuln PYSEC-2026-3552
