@@ -282,14 +282,16 @@ class SafetyFilter:
         if reading_prob > 0.3 or searching_prob > 0.3:
             logger.debug(
                 "Layer 3 BLOCKED: %s due to context (reading=%.2f, searching=%.2f)",
-                command, reading_prob, searching_prob
+                command,
+                reading_prob,
+                searching_prob,
             )
             return VerifiedCommand(
                 command=command,
                 confidence=prediction.intent_confidence,
                 blocked=True,
                 block_reason=BlockReason.CONTEXT_MISMATCH,
-                layers_passed=layers_passed
+                layers_passed=layers_passed,
             )
         layers_passed += 1
 
@@ -332,14 +334,15 @@ class SafetyFilter:
         if normalized_entropy > 0.6:  # Threshold for high uncertainty
             logger.debug(
                 "Layer 5 BLOCKED: %s due to anti-pattern (high entropy %.2f)",
-                command, normalized_entropy
+                command,
+                normalized_entropy,
             )
             return VerifiedCommand(
                 command=command,
                 confidence=prediction.intent_confidence,
                 blocked=True,
                 block_reason=BlockReason.ANTI_PATTERN,
-                layers_passed=layers_passed
+                layers_passed=layers_passed,
             )
         layers_passed += 1
 
@@ -391,10 +394,10 @@ class SafetyFilter:
         # Add adaptive adjustments based on context in Phase 2
         reading_idx = INTENT_CLASSES.index("reading")
         searching_idx = INTENT_CLASSES.index("searching")
-        
+
         reading_prob = float(prediction.all_probabilities[reading_idx])
         searching_prob = float(prediction.all_probabilities[searching_idx])
-        
+
         # If there's non-negligible context noise, raise the bar for confidence
         if reading_prob > 0.1 or searching_prob > 0.1:
             adjustment += 0.05

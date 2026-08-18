@@ -44,9 +44,7 @@ class LagCompensationPredictor:
         self._horizon_s = prediction_horizon_ms / 1000.0
         self._history: deque[tuple[float, float, float]] = deque(maxlen=velocity_window)
 
-    def update_and_predict(
-        self, x: float, y: float, timestamp: float
-    ) -> tuple[float, float]:
+    def update_and_predict(self, x: float, y: float, timestamp: float) -> tuple[float, float]:
         """Add a sample and return a position predicted ahead by horizon_ms.
 
         Args:

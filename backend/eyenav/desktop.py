@@ -79,6 +79,7 @@ class DesktopController:
         if self._telemetry:
             try:
                 import pyautogui
+
                 cx, cy = pyautogui.position()
                 self._telemetry.log_frame(
                     gaze_x=landmarks.gaze_x,

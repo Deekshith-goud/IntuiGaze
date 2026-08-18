@@ -44,12 +44,12 @@ logger = logging.getLogger(__name__)
 pyautogui.FAILSAFE = True
 pyautogui.PAUSE = 0.0  # Remove pyautogui's internal sleep for minimum latency
 
-_BLINK_CLOSE_THRESHOLD = 0.68   # EAR below (baseline × this) = closed
-_LONG_CLOSE_DURATION_S = 2.0    # Trigger scroll mode toggle
-_DOUBLE_BLINK_WINDOW_S = 0.6    # Max gap between two blinks for double-blink
-_CLICK_COOLDOWN_S = 1.0         # Minimum time between clicks
-_PHYSICAL_OVERRIDE_PX = 15      # Physical mouse movement detection threshold
-_PHYSICAL_PAUSE_S = 2.0         # How long to pause after physical override
+_BLINK_CLOSE_THRESHOLD = 0.68  # EAR below (baseline × this) = closed
+_LONG_CLOSE_DURATION_S = 2.0  # Trigger scroll mode toggle
+_DOUBLE_BLINK_WINDOW_S = 0.6  # Max gap between two blinks for double-blink
+_CLICK_COOLDOWN_S = 1.0  # Minimum time between clicks
+_PHYSICAL_OVERRIDE_PX = 15  # Physical mouse movement detection threshold
+_PHYSICAL_PAUSE_S = 2.0  # How long to pause after physical override
 
 
 def _extract_features(lm: EyeLandmarks) -> np.ndarray:
@@ -87,7 +87,7 @@ class GazeCursorController:
         self._filter_y = OneEuroFilter(min_cutoff=0.05, beta=0.001)
 
         self._saccade = SaccadeFixationDetector(
-            saccade_vel_px=500.0,    # Prevent noise from triggering fast-movement mode
+            saccade_vel_px=500.0,  # Prevent noise from triggering fast-movement mode
             fixation_vel_px=150.0,
             min_fixation_ms=80.0,
         )
@@ -120,7 +120,9 @@ class GazeCursorController:
 
         logger.info(
             "GazeCursorController ready. Screen=%dx%d  Calibrated=%s",
-            self.screen_width, self.screen_height, self._mapper.is_fitted,
+            self.screen_width,
+            self.screen_height,
+            self._mapper.is_fitted,
         )
 
     # ──────────────────────────────────────────────────────────────────────────
@@ -133,8 +135,10 @@ class GazeCursorController:
 
         # ── Physical override guard ──────────────────────────────────────────
         cx, cy = pyautogui.position()
-        if (abs(cx - self._last_commanded_x) > _PHYSICAL_OVERRIDE_PX or
-                abs(cy - self._last_commanded_y) > _PHYSICAL_OVERRIDE_PX):
+        if (
+            abs(cx - self._last_commanded_x) > _PHYSICAL_OVERRIDE_PX
+            or abs(cy - self._last_commanded_y) > _PHYSICAL_OVERRIDE_PX
+        ):
             if now > self._pause_until:
                 logger.info("Physical mouse override detected. Pausing 2s.")
             self._pause_until = now + _PHYSICAL_PAUSE_S
@@ -147,8 +151,7 @@ class GazeCursorController:
         # ── Blink / intent processing ────────────────────────────────────────
         avg_ear = (landmarks.left_ear + landmarks.right_ear) / 2.0
         self._ear_history.append(avg_ear)
-        baseline = (sum(self._ear_history) / len(self._ear_history)
-                    if self._ear_history else 0.25)
+        baseline = sum(self._ear_history) / len(self._ear_history) if self._ear_history else 0.25
         closed = avg_ear < (baseline * _BLINK_CLOSE_THRESHOLD)
         self._process_blink(closed, now)
 
@@ -248,7 +251,7 @@ class GazeCursorController:
 
     def _handle_scroll(self, landmarks: EyeLandmarks) -> None:
         """Vertical gaze → scroll in scroll mode."""
-        gy = -landmarks.gaze_y   # Invert: look up = positive gy
+        gy = -landmarks.gaze_y  # Invert: look up = positive gy
         deadzone = 0.20
         if abs(gy) > deadzone:
             magnitude = (abs(gy) - deadzone) / (1.0 - deadzone)

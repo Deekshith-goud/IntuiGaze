@@ -29,13 +29,19 @@ logger = logging.getLogger(__name__)
 
 # 9 calibration targets (normalized screen coordinates)
 _CALIBRATION_POINTS_NORM: list[tuple[float, float]] = [
-    (0.1, 0.1), (0.5, 0.1), (0.9, 0.1),
-    (0.1, 0.5), (0.5, 0.5), (0.9, 0.5),
-    (0.1, 0.9), (0.5, 0.9), (0.9, 0.9),
+    (0.1, 0.1),
+    (0.5, 0.1),
+    (0.9, 0.1),
+    (0.1, 0.5),
+    (0.5, 0.5),
+    (0.9, 0.5),
+    (0.1, 0.9),
+    (0.5, 0.9),
+    (0.9, 0.9),
 ]
 
-_SETTLE_FRAMES = 25    # Discard these frames while eye is settling (≈0.8s at 30fps)
-_COLLECT_FRAMES = 50   # Frames to collect per target (≈1.7s at 30fps)
+_SETTLE_FRAMES = 25  # Discard these frames while eye is settling (≈0.8s at 30fps)
+_COLLECT_FRAMES = 50  # Frames to collect per target (≈1.7s at 30fps)
 _MIN_VALID_FRAMES = 25  # Minimum to accept a target (retry if below)
 
 
@@ -51,6 +57,7 @@ class CalibrationData:
         success: Whether the session completed without errors.
         error: Error message if success=False.
     """
+
     gaze_samples: np.ndarray
     screen_samples: np.ndarray
     screen_width: int
@@ -123,49 +130,53 @@ class CalibrationSession:
 
         status_var = tk.StringVar(value="")
         progress_var = tk.StringVar(value="")
-        tk.Label(root, textvariable=status_var, fg="white", bg="black",
-                 font=("Arial", 20)).place(relx=0.5, rely=0.93, anchor="center")
-        tk.Label(root, textvariable=progress_var, fg="#00FFAA", bg="black",
-                 font=("Arial", 15)).place(relx=0.5, rely=0.97, anchor="center")
+        tk.Label(root, textvariable=status_var, fg="white", bg="black", font=("Arial", 20)).place(
+            relx=0.5, rely=0.93, anchor="center"
+        )
+        tk.Label(
+            root, textvariable=progress_var, fg="#00FFAA", bg="black", font=("Arial", 15)
+        ).place(relx=0.5, rely=0.97, anchor="center")
 
-        # Mutable state shared between outer scope and Tkinter callbacks
-        state = {
-            "point_idx": 0,
-            "frame_count": 0,
-            "buffer": [],
-            "gaze_data": [],
-            "screen_data": [],
-            "cancelled": False,
-            "done": False,
-        }
+        @dataclass
+        class SessionState:
+            point_idx: int = 0
+            frame_count: int = 0
+            buffer: list[np.ndarray] = field(default_factory=list)
+            gaze_data: list[np.ndarray] = field(default_factory=list)
+            screen_data: list[np.ndarray] = field(default_factory=list)
+            cancelled: bool = False
+            done: bool = False
+
+        state = SessionState()
 
         def draw_target(nx: float, ny: float, color: str) -> None:
             canvas.delete("target")
             px, py = int(nx * sw), int(ny * sh)
             for r, fill in [(28, "white"), (14, color), (5, "black")]:
-                canvas.create_oval(px - r, py - r, px + r, py + r,
-                                   fill=fill, outline=fill, tags="target")
+                canvas.create_oval(
+                    px - r, py - r, px + r, py + r, fill=fill, outline=fill, tags="target"
+                )
 
         def on_escape(_event) -> None:
-            state["cancelled"] = True
+            state.cancelled = True
             root.destroy()
 
         root.bind("<Escape>", on_escape)
 
         def tick() -> None:
-            if state["cancelled"] or state["done"]:
-                if not state["cancelled"]:
+            if state.cancelled or state.done:
+                if not state.cancelled:
                     root.destroy()
                 return
 
-            idx = state["point_idx"]
+            idx = state.point_idx
             if idx >= len(points):
-                state["done"] = True
+                state.done = True
                 root.destroy()
                 return
 
             nx, ny = points[idx]
-            fc = state["frame_count"]
+            fc = state.frame_count
             total_needed = _SETTLE_FRAMES + _COLLECT_FRAMES
 
             progress_var.set(f"Target {idx + 1} / {len(points)}")
@@ -188,63 +199,73 @@ class CalibrationSession:
                 if lm is not None and fc >= _SETTLE_FRAMES:
                     feats = _extract_features(lm)
                     if feats is not None:
-                        state["buffer"].append(feats)
+                        state.buffer.append(feats)
 
-            state["frame_count"] += 1
+            state.frame_count += 1
 
             if fc >= total_needed - 1:
-                buf = state["buffer"]
+                buf = state.buffer
                 if len(buf) >= _MIN_VALID_FRAMES:
                     median_feats = np.median(np.array(buf), axis=0)
-                    state["gaze_data"].append(median_feats)
-                    state["screen_data"].append(
-                        np.array([nx * sw, ny * sh], dtype=np.float64)
-                    )
+                    state.gaze_data.append(median_feats)
+                    state.screen_data.append(np.array([nx * sw, ny * sh], dtype=np.float64))
                     logger.info(
                         "Calibration point %d/%d accepted (%d frames). screen=(%.0f, %.0f)",
-                        idx + 1, len(points), len(buf), nx * sw, ny * sh,
+                        idx + 1,
+                        len(points),
+                        len(buf),
+                        nx * sw,
+                        ny * sh,
                     )
-                    state["point_idx"] += 1
+                    state.point_idx += 1
                 else:
                     logger.warning(
                         "Calibration point %d: only %d valid frames. Retrying.",
-                        idx + 1, len(buf),
+                        idx + 1,
+                        len(buf),
                     )
-                state["frame_count"] = 0
-                state["buffer"] = []
+                state.frame_count = 0
+                state.buffer = []
 
             root.after(33, tick)  # ~30fps
 
         # Brief intro screen before starting
         canvas.create_text(
-            sw // 2, sh // 2,
+            sw // 2,
+            sh // 2,
             text="Gaze Calibration\n\nLook at each dot as it appears.\nKeep your head still.\n\nStarting in 2 seconds…\n\n(Press ESC to cancel)",
-            fill="white", font=("Arial", 26), justify="center",
+            fill="white",
+            font=("Arial", 26),
+            justify="center",
         )
         root.after(2000, tick)
         root.mainloop()
 
-        if state["cancelled"]:
+        if state.cancelled:
             return CalibrationData(
                 gaze_samples=np.zeros((0, 6)),
                 screen_samples=np.zeros((0, 2)),
-                screen_width=sw, screen_height=sh,
-                success=False, error="Calibration cancelled by user.",
+                screen_width=sw,
+                screen_height=sh,
+                success=False,
+                error="Calibration cancelled by user.",
             )
 
-        n = len(state["gaze_data"])
+        n = len(state.gaze_data)
         if n < 6:
             return CalibrationData(
                 gaze_samples=np.zeros((0, 6)),
                 screen_samples=np.zeros((0, 2)),
-                screen_width=sw, screen_height=sh,
+                screen_width=sw,
+                screen_height=sh,
                 success=False,
                 error=f"Only {n} calibration points collected (need ≥ 6).",
             )
 
         return CalibrationData(
-            gaze_samples=np.array(state["gaze_data"], dtype=np.float32),
-            screen_samples=np.array(state["screen_data"], dtype=np.float64),
-            screen_width=sw, screen_height=sh,
+            gaze_samples=np.array(state.gaze_data, dtype=np.float32),
+            screen_samples=np.array(state.screen_data, dtype=np.float64),
+            screen_width=sw,
+            screen_height=sh,
             success=True,
         )

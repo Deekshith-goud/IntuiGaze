@@ -157,7 +157,7 @@ class FaceLandmarkExtractor:
         # Eye width and height for normalization
         left_width = np.linalg.norm(left_eye_pts[0] - left_eye_pts[3])
         left_height = np.linalg.norm(left_eye_pts[1] - left_eye_pts[5])
-        
+
         # Calculate physical distance proxy (distance between eyes in normalized coordinates)
         eye_dist = float(np.linalg.norm(left_center - right_center))
 
@@ -168,22 +168,16 @@ class FaceLandmarkExtractor:
         right_gaze_vec = (points[RIGHT_IRIS_CENTER] - right_center) / np.array(
             [left_width, left_height]
         )
-        
+
         # Restore the raw full-image pupil coordinates to preserve the head-navigation macro effect
         raw_lp = (float(points[LEFT_IRIS_CENTER][0]), float(points[LEFT_IRIS_CENTER][1]))
         raw_rp = (float(points[RIGHT_IRIS_CENTER][0]), float(points[RIGHT_IRIS_CENTER][1]))
-        
+
         # Scale coordinates around the center of the image based on distance from camera
         if self._eye_dist_baseline is not None:
             scale = self._eye_dist_baseline / max(eye_dist, 1e-6)
-            left_pupil = (
-                0.5 + (raw_lp[0] - 0.5) * scale,
-                0.5 + (raw_lp[1] - 0.5) * scale
-            )
-            right_pupil = (
-                0.5 + (raw_rp[0] - 0.5) * scale,
-                0.5 + (raw_rp[1] - 0.5) * scale
-            )
+            left_pupil = (0.5 + (raw_lp[0] - 0.5) * scale, 0.5 + (raw_lp[1] - 0.5) * scale)
+            right_pupil = (0.5 + (raw_rp[0] - 0.5) * scale, 0.5 + (raw_rp[1] - 0.5) * scale)
         else:
             left_pupil = raw_lp
             right_pupil = raw_rp
@@ -235,7 +229,7 @@ class FaceLandmarkExtractor:
                     self._brow_baseline,
                     self._gaze_x_baseline,
                     self._gaze_y_baseline,
-                    self._eye_dist_baseline
+                    self._eye_dist_baseline,
                 )
 
             # During calibration, return neutral values

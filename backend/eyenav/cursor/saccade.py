@@ -27,6 +27,7 @@ from enum import Enum
 
 class GazeState(Enum):
     """Current gaze classification state."""
+
     FIXATION = "fixation"
     SACCADE = "saccade"
     UNKNOWN = "unknown"
@@ -34,7 +35,7 @@ class GazeState(Enum):
 
 @dataclass(frozen=True)
 class GazeSample:
-    x: float          # Screen pixels
+    x: float  # Screen pixels
     y: float
     timestamp: float  # Seconds
 
@@ -65,9 +66,7 @@ class SaccadeFixationDetector:
         self._fixation_start: float | None = None
         self._last: GazeSample | None = None
 
-    def update(
-        self, x: float, y: float, timestamp: float
-    ) -> tuple[GazeState, tuple[float, float]]:
+    def update(self, x: float, y: float, timestamp: float) -> tuple[GazeState, tuple[float, float]]:
         """Update with a new screen-space gaze sample.
 
         Args:

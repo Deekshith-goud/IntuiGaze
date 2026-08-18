@@ -105,10 +105,8 @@ class GazeScreenMapper:
             ValueError: If fewer than 6 samples are provided.
         """
         if len(gaze_samples) < 6:
-            raise ValueError(
-                f"Need ≥ 6 calibration samples, got {len(gaze_samples)}."
-            )
-        X = self._poly_features(gaze_samples)   # (N, 13)
+            raise ValueError(f"Need ≥ 6 calibration samples, got {len(gaze_samples)}.")
+        X = self._poly_features(gaze_samples)  # (N, 13)
         y_x = screen_samples[:, 0]
         y_y = screen_samples[:, 1]
 
@@ -131,7 +129,9 @@ class GazeScreenMapper:
         rmse_y = float(np.sqrt(np.mean((pred_y - y_y) ** 2)))
         logger.info(
             "GazeScreenMapper fitted: N=%d  RMSE=(%.1fpx, %.1fpx)",
-            len(gaze_samples), rmse_x, rmse_y,
+            len(gaze_samples),
+            rmse_x,
+            rmse_y,
         )
 
     def map(self, gaze_features: np.ndarray) -> tuple[float, float]:
@@ -147,7 +147,7 @@ class GazeScreenMapper:
             logger.debug("Mapper not fitted — returning screen center.")
             return self._sw / 2.0, self._sh / 2.0
 
-        x_feat = self._poly_features(gaze_features[np.newaxis])   # (1, 13)
+        x_feat = self._poly_features(gaze_features[np.newaxis])  # (1, 13)
         sx = float((x_feat @ self._coeff_x)[0])
         sy = float((x_feat @ self._coeff_y)[0])
         return (
@@ -189,7 +189,9 @@ class GazeScreenMapper:
 
         logger.debug(
             "Online adaptation applied (weight=%.2f, screen=(%.0f, %.0f)).",
-            weight, confirmed_screen_xy[0], confirmed_screen_xy[1],
+            weight,
+            confirmed_screen_xy[0],
+            confirmed_screen_xy[1],
         )
 
     def save(self) -> None:
@@ -225,7 +227,10 @@ class GazeScreenMapper:
             if data.get("screen_width") != self._sw or data.get("screen_height") != self._sh:
                 logger.warning(
                     "Saved calibration is for %dx%d, current screen is %dx%d. Ignoring.",
-                    data.get("screen_width"), data.get("screen_height"), self._sw, self._sh,
+                    data.get("screen_width"),
+                    data.get("screen_height"),
+                    self._sw,
+                    self._sh,
                 )
                 return False
 

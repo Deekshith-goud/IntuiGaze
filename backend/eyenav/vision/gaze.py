@@ -327,6 +327,7 @@ class GazeEstimator:
         Returns:
             Confidence score ∈ [0, 1].
         """
+
         def compute_entropy(logits: np.ndarray) -> float:
             exp_logits = np.exp(logits - logits.max())
             probs = exp_logits / exp_logits.sum()
@@ -338,7 +339,7 @@ class GazeEstimator:
 
         pitch_entropy = compute_entropy(pitch_logits)
         yaw_entropy = compute_entropy(yaw_logits)
-        
+
         # Confidence is inversely proportional to mean normalized entropy
         confidence = 1.0 - (pitch_entropy + yaw_entropy) / 2.0
         return max(0.0, min(1.0, float(confidence)))
