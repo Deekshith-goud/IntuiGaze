@@ -28,15 +28,17 @@ venv.bak/
 *.trt
 *.engine
 *.pkl
+!backend/eyenav/models/*.pkl
 *.bin
 checkpoints/
 runs/
 wandb/
 mlruns/
 .mlflow/
+/model_artifacts/
+/reports/private/
 
 # Data
-*.csv
 *.parquet
 *.h5
 *.hdf5
@@ -47,6 +49,10 @@ data/processed/
 datasets/raw/
 datasets/processed/
 datasets/cache/
+/private_data/
+*.csv
+!data/*.csv
+!data/**/*.csv
 
 # Logs
 logs/
@@ -103,6 +109,14 @@ temp/
 *.tmp
 *.bak
 *.orig
+archive.zip
+*.zip
+trash/
+frontend/
+
+# Local experiment configs
+configs/ml/experiment.local.yaml
+configs/ml/evaluation.local.yaml
 
 # OS
 .DS_Store

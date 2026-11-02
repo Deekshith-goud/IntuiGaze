@@ -1,0 +1,70 @@
+# Replace TODOs after the task, deployment claim, and baseline are understood.
+# Do not use this template as a release gate until thresholds are reviewed and frozen.
+protocol:
+  version: 1
+  test_set_frozen: false  # Set true only after split manifest has been generated and sealed.
+  final_test_used_for_tuning: false
+  primary_metric: "TODO"
+  aggregation_unit: "TODO: per-frame | per-trial | per-session | per-participant"
+  group_generalisation_claim: "TODO: known-user session | unseen session | unseen participant | unseen device"
+
+screen_coordinate_regression:
+  report:
+    - mae_px_per_axis
+    - rmse_px_per_axis
+    - median_euclidean_error_px
+    - p90_euclidean_error_px
+    - p95_euclidean_error_px
+    - target_hit_rate_at_tolerance
+  target_hit_tolerance_px: null  # Must be chosen and justified before final test.
+  compare_per_resolution: true
+  report_normalized_screen_diagonal_error: true
+
+gaze_direction_regression:
+  report:
+    - median_angular_error_degrees
+    - mean_angular_error_degrees
+    - p95_angular_error_degrees
+  enabled_only_if_coordinate_frame_and_units_verified: true
+
+intent_classification:
+  report:
+    - confusion_matrix
+    - per_class_precision_recall_f1
+    - macro_f1
+    - balanced_accuracy
+    - pr_auc_when_probability_scores_available
+  report_class_support: true
+  false_triggers_per_minute_limit: null  # Select on validation data from user/task requirements.
+  missed_event_rate_limit: null
+  event_matching_window_ms: null
+  debounce_window_ms: null
+
+system:
+  report:
+    - end_to_end_latency_p50_ms
+    - end_to_end_latency_p95_ms
+    - sustained_fps
+    - stale_frame_rate
+    - target_acquisition_success_rate
+    - overshoot_or_jump_rate
+    - false_click_rate
+    - missed_click_rate
+    - peak_memory_mb
+    - model_size_mb
+  target_hardware: "TODO"
+
+safety_gates:
+  explicit_opt_in_pass_required: true
+  emergency_stop_pass_required: true
+  no_actuation_in_automated_tests_required: true
+  low_confidence_click_blocked_required: true
+  invalid_or_stale_prediction_fails_closed_required: true
+  camera_loss_fails_safe_required: true
+  model_load_failure_fails_safe_required: true
+
+release:
+  no_critical_subgroup_regression: true
+  no_unexplained_tail_error_regression: true
+  thresholds_predeclared: false  # Must become true before final candidate test.
+  reviewer: "TODO"

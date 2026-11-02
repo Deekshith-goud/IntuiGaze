@@ -32,13 +32,12 @@ class DesktopController:
         self,
         mapper: GazeScreenMapper | None = None,
         telemetry_logger=None,
+        invert_eyes: bool = False,
     ) -> None:
-        self._controller = GazeCursorController(mapper=mapper)
+        self._controller = GazeCursorController(mapper=mapper, invert_eyes=invert_eyes)
         self._telemetry = telemetry_logger
 
-        # Proxy callback attributes so callers can still do:
-        #   controller.on_lock_toggled = overlay.set_status
-        #   controller.on_blink_detected = lambda: overlay.flash(...)
+        # Proxy callback attributes
         self._controller.on_blink_detected = None
 
     # ── Public callback properties ───────────────────────────────────────────
@@ -53,6 +52,38 @@ class DesktopController:
         self._controller.on_scroll_mode_toggled = cb
 
     @property
+    def on_scroll_mode_toggled(self):
+        return self._controller.on_scroll_mode_toggled
+
+    @on_scroll_mode_toggled.setter
+    def on_scroll_mode_toggled(self, cb):
+        self._controller.on_scroll_mode_toggled = cb
+
+    @property
+    def on_drag_mode_toggled(self):
+        return self._controller.on_drag_mode_toggled
+
+    @on_drag_mode_toggled.setter
+    def on_drag_mode_toggled(self, cb):
+        self._controller.on_drag_mode_toggled = cb
+
+    @property
+    def on_standby_toggled(self):
+        return self._controller.on_standby_toggled
+
+    @on_standby_toggled.setter
+    def on_standby_toggled(self, cb):
+        self._controller.on_standby_toggled = cb
+
+    @property
+    def on_gesture_event(self):
+        return self._controller.on_gesture_event
+
+    @on_gesture_event.setter
+    def on_gesture_event(self, cb):
+        self._controller.on_gesture_event = cb
+
+    @property
     def on_blink_detected(self):
         return self._controller.on_blink_detected
 
@@ -65,6 +96,18 @@ class DesktopController:
     @property
     def is_calibrated(self) -> bool:
         return self._controller.is_calibrated
+
+    @property
+    def is_scroll_mode(self) -> bool:
+        return self._controller.is_scroll_mode
+
+    @property
+    def is_dragging(self) -> bool:
+        return self._controller.is_dragging
+
+    @property
+    def is_standby(self) -> bool:
+        return self._controller.is_standby
 
     @property
     def mapper(self) -> GazeScreenMapper:

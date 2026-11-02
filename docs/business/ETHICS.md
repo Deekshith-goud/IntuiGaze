@@ -3,7 +3,7 @@
 **Document Version:** 1.0  
 **Status:** Draft — Pending External Review  
 **Owner:** Ethics Committee  
-**Last Updated:** 2024-Q4  
+**Last Updated:** 2026-Q4  
 **Classification:** Public  
 
 ---

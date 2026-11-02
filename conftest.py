@@ -72,3 +72,43 @@ def default_config():
 def camera_id(request: pytest.FixtureRequest) -> int:
     """Return the camera ID to use in hardware tests."""
     return int(request.config.getoption("--camera-id", default="0"))
+
+
+# ─── Desktop Actuation Safety Fixtures ─────────────────────────────────────
+
+@pytest.fixture(autouse=True)
+def guard_no_desktop_actuation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Safety guard: Intercept and fail any physical OS desktop actuation during tests.
+
+    Complies with AGENTS.md:
+        "Do not run code that controls the actual mouse or clicks on the desktop
+        during automated tests. Use mock/stub cursor adapters and dry-run mode."
+    """
+    def forbidden_actuation(*args, **kwargs):
+        raise RuntimeError(
+            "CRITICAL SAFETY VIOLATION: Automated test attempted physical desktop mouse/keyboard actuation! "
+            "Tests must use mock cursor adapters or dry-run mode per AGENTS.md."
+        )
+
+    try:
+        import pyautogui
+
+        actuation_methods = [
+            # Mouse movement
+            "moveTo", "moveRel", "move",
+            # Mouse click & button events
+            "click", "doubleClick", "tripleClick",
+            "mouseDown", "mouseUp", "rightClick", "middleClick",
+            # Mouse drag
+            "dragTo", "dragRel", "drag",
+            # Mouse scroll
+            "scroll", "hscroll", "vscroll",
+            # Keyboard events
+            "write", "typewrite", "press", "keyDown", "keyUp", "hotkey",
+        ]
+        for fn_name in actuation_methods:
+            if hasattr(pyautogui, fn_name):
+                monkeypatch.setattr(pyautogui, fn_name, forbidden_actuation)
+    except (ImportError, Exception):
+        pass
+

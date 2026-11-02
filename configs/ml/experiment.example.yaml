@@ -1,0 +1,50 @@
+# Copy to a local, git-ignored experiment config and replace every TODO.
+# This is a schema/example, not a runnable model definition until input/target fields are verified.
+experiment:
+  name: intuigaze-baseline-001
+  hypothesis: "TODO: state one falsifiable hypothesis"
+  task_type: "TODO: screen_coordinate_regression | gaze_direction_regression | intent_classification | event_detection"
+  sample_unit: "TODO: frame | clip | trial | session | event"
+  seed: 42
+  code_revision: "TODO: git commit SHA"
+
+data:
+  dataset_version: "TODO"
+  manifest_path: "TODO: local path; do not commit private paths"
+  manifest_sha256: "TODO"
+  input_fields: []   # TODO: verified names
+  target_fields: []  # TODO: verified names
+  subject_group_field: "TODO or null if genuinely unavailable"
+  session_group_field: "TODO or null if unavailable"
+  device_group_field: "TODO or null if unavailable"
+  split_manifest_version: "TODO"
+  train_fraction: 0.70
+  validation_fraction: 0.15
+  test_fraction: 0.15
+  split_method: "TODO: group-aware strategy chosen for intended claim"
+  # Fractions are suggestions only. Group boundaries and sample counts matter more than exact ratios.
+
+preprocessing:
+  coordinate_frame: "TODO"
+  coordinate_units: "TODO"
+  screen_resolution_policy: "TODO"
+  fit_on_train_only: true
+  transform_version: "TODO"
+
+model:
+  family: "TODO: use current polynomial/regression baseline first where appropriate"
+  parameters: {}
+
+training:
+  batch_size: null       # Set only if the chosen training stack uses batches.
+  max_epochs: null
+  early_stopping_metric: "TODO"
+  checkpoint_selection_rule: "TODO: validation only"
+  max_runtime_minutes: null
+
+artifacts:
+  output_root: "TODO: local/ignored directory"
+  save_config_copy: true
+  save_data_split_hashes: true
+  save_metrics_json: true
+  save_model_checksum: true
